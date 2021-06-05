@@ -27,6 +27,7 @@ bool timer_flag = false;
 // LTC2944
 #define LTC2944_RESISTOR            1 //milliohms
 
+
 // Define struct for the voltages
 struct data_struct
 {
@@ -58,6 +59,9 @@ void readSensorsData();
 
 // Convert voltage to percentage
 float mapVoltageToPercentage(float voltage);
+
+//Set the leds
+void setLeds();
 
 
 #endif

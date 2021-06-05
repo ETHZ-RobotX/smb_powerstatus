@@ -6,7 +6,16 @@
 #include "arduino-timer.h"
 #include <Adafruit_ADS1X15.h>
 #include "LTC2944.h"
+#include "LTC3219.h"
 
+/************* DEFINES *************/
+// LED
+#define LED_ACDC_GREEN            LTC3219_LED1_REGISTER
+#define LED_ACDC_RED              LTC3219_LED2_REGISTER
+#define LED_BAT1_GREEN            LTC3219_LED3_REGISTER
+#define LED_BAT1_RED              LTC3219_LED4_REGISTER
+#define LED_BAT2_GREEN            LTC3219_LED5_REGISTER
+#define LED_BAT2_RED              LTC3219_LED6_REGISTER
 
 /************* GLOBAL VARIABLES *************/
 #ifdef USE_ROS
@@ -25,6 +34,9 @@ auto timer = timer_create_default();
 Adafruit_ADS1015 ads1015;
 LTC2944 ltc2944(LTC2944_RESISTOR);
 data_struct data;
+
+// LED
+LTC3219 ltc3219;
 
 /************* SETUP *************/
 void setup(){
@@ -138,6 +150,66 @@ float mapVoltageToPercentage(float voltage){
     }
 
     return (voltage - BATTERY_MINUMUM) / (BATTERY_MAXIMUM - BATTERY_MINUMUM);
+}
+
+void setLeds()
+{
+  //set LEDs according to connected batteries, voltage and active channel
+  // TODO: blink when battery is connected, but the channel is not active
+  if(data.v_acdc >= BATTERY_LOW_INDICATION)
+  {
+      ltc3219.turnOnLED(LED_ACDC_GREEN);
+      ltc3219.turnOffLED(LED_ACDC_RED); 
+  }
+  else
+  {
+    if((data.v_acdc < BATTERY_LOW_INDICATION) && (data.v_acdc >= POWER_PRESENT_VOLTAGE))
+    {
+        ltc3219.turnOffLED(LED_ACDC_GREEN);
+        ltc3219.turnOnLED(LED_ACDC_RED);
+    }
+    else
+    {
+        ltc3219.turnOffLED(LED_ACDC_GREEN);
+        ltc3219.turnOffLED(LED_ACDC_RED);
+    }
+  }
+  if(data.v_bat1 >= BATTERY_LOW_INDICATION)
+  {
+      ltc3219.turnOnLED(LED_BAT1_GREEN);
+      ltc3219.turnOffLED(LED_BAT1_RED);  
+  }
+  else
+  {
+    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.v_bat1 >= POWER_PRESENT_VOLTAGE))
+    {
+        ltc3219.turnOffLED(LED_BAT1_GREEN);
+        ltc3219.turnOnLED(LED_BAT1_RED);
+    }
+    else
+    {
+        ltc3219.turnOffLED(LED_BAT1_GREEN);
+        ltc3219.turnOffLED(LED_BAT1_RED);
+    }
+  }
+  if(data.v_bat2 >= BATTERY_LOW_INDICATION)
+  {
+      ltc3219.turnOnLED(LED_BAT2_GREEN);
+      ltc3219.turnOffLED(LED_BAT2_RED);    
+  }
+  else
+  {
+    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.v_bat2 >= POWER_PRESENT_VOLTAGE))
+    {
+        ltc3219.turnOffLED(LED_BAT2_GREEN);
+        ltc3219.turnOnLED(LED_BAT2_RED);
+    }
+    else
+    {
+        ltc3219.turnOffLED(LED_BAT2_GREEN);
+        ltc3219.turnOffLED(LED_BAT2_RED);
+    }
+  }
 }
 
 
