@@ -1,0 +1,6 @@
+{
+    "board": "arduino:samd:mkrzero",
+    "sketch": "smb_2.0_controller/smb_2.0_controller.ino",
+    "programmer": "arduino:avrispmkii",
+    "port": "/dev/ttyUSB0"
+}
