@@ -113,7 +113,32 @@ void publishROS(){
 #else
 void publishSerial(){
 
- 
+    Serial.println("Arduino measurements:");
+    Serial.print("ACDC: ");
+    Serial.print(data.v_acdc);
+    Serial.print("V");
+    Serial.print("    ");
+    Serial.print("Bat 1: ");
+    Serial.print(data.v_bat1);
+    Serial.print("V");
+    Serial.print("    ");
+    Serial.print("Bat 2: ");
+    Serial.print(data.v_bat2);
+    Serial.print("V");
+    Serial.print("    ");
+
+    Serial.println();
+    Serial.println();
+    Serial.println("LTC2944 measurements:");
+    Serial.print("Output: ");
+    Serial.print(data.v_out);
+    Serial.print("V  ");
+    Serial.print(data.v_out);
+    Serial.print("A     ");
+    Serial.print(data.v_out);
+    Serial.print("°C");
+    Serial.println();
+
 
 }
 #endif
