@@ -7,6 +7,7 @@
 #include <Adafruit_ADS1X15.h>
 #include "LTC2944.h"
 #include "LTC3219.h"
+#include <Wire.h>
 
 /************* DEFINES *************/
 // LED
@@ -63,10 +64,18 @@ Wire.begin();
     ads1015.setGain(GAIN_TWO);
     ads1015.begin();
 
+    while (ltc2944.begin() == false) {
+        Serial.println("Failed to detect LTC2944!");
+    delay(5000);
+    }
+
     //Setup LTC2944
     ltc2944.setPrescalerM(256);
     ltc2944.setADCMode(ADC_MODE_SLEEP);
     ltc2944.startMeasurement();
+
+    //Setup LTC3219
+    ltc3219.begin();
 
 }
 
@@ -75,6 +84,8 @@ void loop(){
     timer.tick();
 
     readSensorsData();
+
+    setLeds();
 
     // Send data wenn timer is triggered
     if(timer_flag){
@@ -133,9 +144,9 @@ void publishSerial(){
     Serial.print("Output: ");
     Serial.print(data.v_out);
     Serial.print("V  ");
-    Serial.print(data.v_out);
+    Serial.print(data.c_out);
     Serial.print("A     ");
-    Serial.print(data.v_out);
+    Serial.print(data.temp);
     Serial.print("°C");
     Serial.println();
 
@@ -236,5 +247,3 @@ void setLeds()
     }
   }
 }
-
-

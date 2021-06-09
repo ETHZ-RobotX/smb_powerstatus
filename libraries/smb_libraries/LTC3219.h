@@ -23,6 +23,7 @@ class LTC3219
 
 public:
     LTC3219();
+    bool begin(TwoWire &wirePort = Wire);
     bool writeByteToRegister(uint8_t address, uint8_t value);
     void turnOnLED(uint8_t address);
     void turnOffLED(uint8_t address);
