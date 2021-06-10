@@ -12,6 +12,10 @@ void LTC3219::turnOffLED(uint8_t address){
     writeByteToRegister(address, 0x00);
 }
 
+void LTC3219::setLEDBlink(uint8_t address){
+	writeByteToRegister(address, 0x7F);
+}
+
 bool LTC3219::begin(TwoWire &wirePort) {
 	// Wire.begin() should be called in the application code in advance
 	_i2cPort = &wirePort;

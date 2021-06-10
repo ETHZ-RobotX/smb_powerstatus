@@ -7,6 +7,7 @@
 #include <Adafruit_ADS1X15.h>
 #include "LTC2944.h"
 #include "LTC3219.h"
+#include "TCA9554.hpp"
 #include <Wire.h>
 
 /************* DEFINES *************/
@@ -38,6 +39,10 @@ data_struct data;
 
 // LED
 LTC3219 ltc3219;
+
+// Battery Valid
+TCA9554 tca9554;
+uint8_t tca9554_value = 0;
 
 /************* SETUP *************/
 void setup(){
@@ -77,6 +82,9 @@ Wire.begin();
     //Setup LTC3219
     ltc3219.begin();
 
+    //Setup TCA9554
+    tca9554.begin();
+
 }
 
 /************* LOOP *************/
@@ -84,6 +92,8 @@ void loop(){
     timer.tick();
 
     readSensorsData();
+
+    powerSourceUsed();
 
     setLeds();
 
@@ -108,13 +118,21 @@ void publishROS(){
     smb_power_msg.battery_1.present = POWER_PRESENT(data.v_bat1);
     smb_power_msg.battery_1.voltage = data.v_bat1;
     smb_power_msg.battery_1.percentage = mapVoltageToPercentage(data.v_bat1);
-    smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_DISCHARGING; //TODO
+    if(data.bat1_use){
+        smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_DISCHARGING;
+    }else{
+        smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_NOT_CHARGING;
+    }
 
     // BATTERY 2 data
     smb_power_msg.battery_2.present = POWER_PRESENT(data.v_bat2);
     smb_power_msg.battery_2.voltage = data.v_bat2;
     smb_power_msg.battery_2.percentage = mapVoltageToPercentage(data.v_bat2);
-    smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_DISCHARGING; //TODO
+    if(data.bat2_use){
+        smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_DISCHARGING;
+    }else{
+        smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_NOT_CHARGING;
+    }
 
 
     // Publish the data
@@ -150,6 +168,10 @@ void publishSerial(){
     Serial.print("°C");
     Serial.println();
 
+    Serial.print("Port     ");
+    Serial.print(data.acdc_val);
+    Serial.println();
+
 
 }
 #endif
@@ -174,6 +196,32 @@ void readSensorsData(){
     data.v_out = ltc2944.getVoltage();
     data.c_out = ltc2944.getCurrent();
     data.temp = ltc2944.getTemperature();
+
+    //Read from tca9554
+    tca9554.readInputs(&tca9554_value);
+}
+
+void powerSourceUsed(){
+    bool power_valid[3] = {0};
+    tca9554.getBatteryValid(power_valid);
+    data.acdc_val = power_valid[0];
+    data.bat1_val = power_valid[1];
+    data.bat2_val = power_valid[2];
+    if(power_valid[0]){
+        data.acdc_use = true;
+        data.bat1_use = false;
+        data.bat2_use = false;
+    }else if (power_valid[1] && !power_valid[0])
+    {
+        data.acdc_use = false;
+        data.bat1_use = true;
+        data.bat2_use = false;        
+    }else
+    {
+        data.acdc_use = false;
+        data.bat1_use = false;
+        data.bat2_use = true;
+    }    
 }
 
 float mapVoltageToPercentage(float voltage){
@@ -190,8 +238,6 @@ float mapVoltageToPercentage(float voltage){
 
 void setLeds()
 {
-  //set LEDs according to connected batteries, voltage and active channel
-  // TODO: blink when battery is connected, but the channel is not active
   if(data.v_acdc >= BATTERY_LOW_INDICATION)
   {
       ltc3219.turnOnLED(LED_ACDC_GREEN);
@@ -199,10 +245,14 @@ void setLeds()
   }
   else
   {
-    if((data.v_acdc < BATTERY_LOW_INDICATION) && (data.v_acdc >= POWER_PRESENT_VOLTAGE))
+    if((data.v_acdc < BATTERY_LOW_INDICATION) && (data.acdc_val))
+    {
+        ltc3219.setLEDBlink(LED_ACDC_GREEN);
+        ltc3219.turnOffLED(LED_ACDC_RED);
+    }else if((data.v_acdc >= POWER_PRESENT_VOLTAGE) && !(data.acdc_val))
     {
         ltc3219.turnOffLED(LED_ACDC_GREEN);
-        ltc3219.turnOnLED(LED_ACDC_RED);
+        ltc3219.turnOnLED(LED_ACDC_RED); 
     }
     else
     {
@@ -217,7 +267,11 @@ void setLeds()
   }
   else
   {
-    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.v_bat1 >= POWER_PRESENT_VOLTAGE))
+    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.bat1_val))
+    {
+        ltc3219.setLEDBlink(LED_BAT1_GREEN);
+        ltc3219.turnOffLED(LED_BAT1_RED);
+    }else if((data.v_bat1 >= POWER_PRESENT_VOLTAGE) && !(data.bat1_val))
     {
         ltc3219.turnOffLED(LED_BAT1_GREEN);
         ltc3219.turnOnLED(LED_BAT1_RED);
@@ -235,10 +289,14 @@ void setLeds()
   }
   else
   {
-    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.v_bat2 >= POWER_PRESENT_VOLTAGE))
+    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.bat2_val))
+    {
+        ltc3219.setLEDBlink(LED_BAT2_GREEN);
+        ltc3219.turnOffLED(LED_BAT2_RED);
+    }else if((data.v_bat2 >= POWER_PRESENT_VOLTAGE) && !(data.bat2_val))
     {
         ltc3219.turnOffLED(LED_BAT2_GREEN);
-        ltc3219.turnOnLED(LED_BAT2_RED);
+        ltc3219.turnOnLED(LED_BAT2_RED);        
     }
     else
     {

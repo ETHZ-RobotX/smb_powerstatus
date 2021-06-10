@@ -27,6 +27,7 @@ public:
     bool writeByteToRegister(uint8_t address, uint8_t value);
     void turnOnLED(uint8_t address);
     void turnOffLED(uint8_t address);
+    void setLEDBlink(uint8_t address);
 private:
     TwoWire *_i2cPort;
 };

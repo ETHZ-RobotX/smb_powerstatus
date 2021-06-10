@@ -1,7 +1,7 @@
 #ifndef SMB_2_CONTROLLER_H__
 #define SMB_2_CONTROLLER_H__
 
-//#define USE_ROS
+#define USE_ROS
 
 #ifdef USE_ROS
 #define USE_USBCON          // Use native USB Serial as COM port for ROS
@@ -18,10 +18,10 @@ bool timer_flag = false;
 #define ADC_RESISTOR_DIVIDER_RATIO    ((6.8 + 91)/6.8)
 
 // Battery define
-#define BATTERY_LOW_INDICATION      3.4 * 6 // 3.4V each cell for a 6S battery
-#define POWER_PRESENT_VOLTAGE       6.0       // minimum voltage, to be sure that a battery is plugged in
+#define BATTERY_LOW_INDICATION      3.2 * 7 
+#define POWER_PRESENT_VOLTAGE       18       // minimum voltage, to be sure that a battery is plugged in
 #define BATTERY_MAXIMUM             29.4
-#define BATTERY_MINUMUM             21
+#define BATTERY_MINUMUM             19.8
 #define POWER_PRESENT(voltage)    voltage > POWER_PRESENT_VOLTAGE
 
 // LTC2944
@@ -39,6 +39,15 @@ struct data_struct
     float v_out;
     float c_out;
     float temp;
+    // Battery use
+    bool acdc_use;
+    bool bat1_use;
+    bool bat2_use;
+    // Battery valid
+    bool acdc_val;
+    bool bat1_val;
+    bool bat2_val;
+
 };
 
 /************* FUNCTIONS DEFINES *************/
@@ -62,6 +71,8 @@ float mapVoltageToPercentage(float voltage);
 
 //Set the leds
 void setLeds();
+
+void powerSourceUsed();
 
 
 #endif
