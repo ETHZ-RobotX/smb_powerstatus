@@ -11,8 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-   SMBPowerStatus.msg
+    FILES
+    SMBPowerStatus.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -21,3 +21,8 @@ generate_messages(
     std_msgs  
     sensor_msgs
 )
+
+catkin_package(
+    CATKIN_DEPENDS message_runtime
+)
+
