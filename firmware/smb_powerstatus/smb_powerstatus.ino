@@ -114,14 +114,20 @@ void publishROS(){
     smb_power_msg.power_supply_present = POWER_PRESENT(data.v_acdc);
     smb_power_msg.power_supply_voltage = data.v_acdc;
 
+    // Output voltage and current
+    smb_power_msg.output_voltage = data.v_out;
+    smb_power_msg.output_current = data.c_out;
+
     // BATTERY 1 data
     smb_power_msg.battery_1.present = POWER_PRESENT(data.v_bat1);
     smb_power_msg.battery_1.voltage = data.v_bat1;
     smb_power_msg.battery_1.percentage = mapVoltageToPercentage(data.v_bat1);
     if(data.bat1_use){
         smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_DISCHARGING;
+        smb_power_msg.battery_1.current = data.c_out;
     }else{
         smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_NOT_CHARGING;
+        smb_power_msg.battery_1.current = 0;
     }
 
     // BATTERY 2 data
@@ -130,8 +136,10 @@ void publishROS(){
     smb_power_msg.battery_2.percentage = mapVoltageToPercentage(data.v_bat2);
     if(data.bat2_use){
         smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_DISCHARGING;
+        smb_power_msg.battery_2.current = data.c_out;
     }else{
         smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_NOT_CHARGING;
+        smb_power_msg.battery_2.current = 0;
     }
 
 
