@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="80f4", SYMLINK+="smb-power", GROUP="dialout", MODE="0666"
