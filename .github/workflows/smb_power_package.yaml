@@ -23,7 +23,7 @@ jobs:
         apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
         apt update && apt install -y python3-pip
         pip3 install osrf-pycommon
-        apt update && apt install -y python3-wstool python3-catkin-tools 
+        apt update && apt install -y python3-wstool python3-catkin-tools ros-noetic-rosserial ros-noetic-rosserial-arduino
     - name: release_build_test
       working-directory: 
       run: |
@@ -40,5 +40,10 @@ jobs:
         rosdep update
         rosdep install --from-paths src --ignore-src -y --rosdistro ${{matrix.config.rosdistro}}
         catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
+        source /opt/ros/$ROS_DISTRO/setup.bash
         catkin build -j$(nproc) -l$(nproc) smb_powerstatus
+        source devel/setup.bash
+        mkdir -p $HOME/Arduino/libraries
+        cd $HOME/Arduino/libraries
+        rosrun rosserial_arduino make_libraries.py .
 
