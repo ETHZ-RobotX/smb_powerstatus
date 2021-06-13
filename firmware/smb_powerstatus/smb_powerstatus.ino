@@ -1,8 +1,8 @@
 /************* INCLUDES *************/
 #include <stdio.h>
-#include "smb_2.0_controller.h"
+#include "smb_powerstatus.h"
 #include <ros.h>
-#include <smb_rviz_plugins/SMBPower.h>
+#include <smb_powerstatus/SMBPowerStatus.h>
 #include "arduino-timer.h"
 #include <Adafruit_ADS1X15.h>
 #include "LTC2944.h"
@@ -21,12 +21,12 @@
 
 /************* GLOBAL VARIABLES *************/
 #ifdef USE_ROS
-// Custom message SMBPower
-smb_rviz_plugins::SMBPower smb_power_msg;
+// Custom message SMBPowerStatus
+smb_powerstatus::SMBPowerStatus smb_power_msg;
 
 // Nodehandle and publisher
 ros::NodeHandle nh;
-ros::Publisher smb_power_pub("/smb_power/payload", &smb_power_msg);
+ros::Publisher smb_power_pub("/smb_powerstatus/payload", &smb_power_msg);
 #endif
 
 auto timer = timer_create_default();
