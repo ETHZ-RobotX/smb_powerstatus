@@ -42,8 +42,3 @@ jobs:
         catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
         source /opt/ros/$ROS_DISTRO/setup.bash
         catkin build -j$(nproc) -l$(nproc) smb_powerstatus
-        source devel/setup.bash
-        mkdir -p $HOME/Arduino/libraries
-        cd $HOME/Arduino/libraries
-        rosrun rosserial_arduino make_libraries.py .
-
