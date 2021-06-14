@@ -3,7 +3,7 @@
 
 Software to display the power source status of the SuperMegaBot.
 
-The repository contains the launchfile for the SuperMegaBot, the custom message definition for publishing the powersource status and the firmware for the power control board.
+The repository contains the launchfile for the SuperMegaBot, the custom message definition for publishing the power source status and the firmware for the power control board.
 
 ## Install
 ### Install dependecies
@@ -27,7 +27,7 @@ To build the firmware you have to install the [Arduino IDE](https://www.arduino.
 - arduino-timer **(v. 2.3.0)**
 - Adafruit ADS1X15 **(v. 2.1.1)**
 
-The power control board is using an **ATSAMD21** MCU, please install **Arduino SAMD Boards** from the boar manager and select **Arduino MKRZERO** as board.
+The power control board is using an **ATSAMD21** MCU, please install **Arduino SAMD Boards** from the board manager and select **Arduino MKRZERO** as board.
 
 Now link the libraries of the repository to the Arduino library folder and add the ROS libraries too.
 
