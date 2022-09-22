@@ -297,7 +297,7 @@ void setLeds()
   }
   else
   {
-    if((data.v_bat1 < BATTERY_LOW_INDICATION) && (data.bat2_val))
+    if((data.v_bat2 < BATTERY_LOW_INDICATION) && (data.bat2_val))
     {
         ltc3219.setLEDBlink(LED_BAT2_GREEN);
         ltc3219.turnOffLED(LED_BAT2_RED);
