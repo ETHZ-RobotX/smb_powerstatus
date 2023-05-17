@@ -3,9 +3,8 @@
 #include "smb_powerstatus.h"
 #include <ros.h>
 #include <smb_powerstatus/SMBPowerStatus.h>
-#include "arduino-timer.h"
+#include <arduino-timer.h>
 #include <Adafruit_ADS1X15.h>
-#include "LTC2944.h"
 #include "LTC3219.h"
 #include "TCA9554.hpp"
 #include <Wire.h>
@@ -34,7 +33,6 @@ auto timer = timer_create_default();
 
 // Voltages
 Adafruit_ADS1015 ads1015;
-LTC2944 ltc2944(LTC2944_RESISTOR);
 data_struct data;
 
 // LED
@@ -59,6 +57,9 @@ Wire.begin();
 #else
     //Initialize Serial communication
     Serial.begin(115200);
+    while(!Serial) {
+      ; // wait for serial port to connect.
+    }
 #endif
 
     // Initialize timer
@@ -66,18 +67,16 @@ Wire.begin();
 
 
     //Setup ADS1015
-    ads1015.setGain(GAIN_TWO);
-    ads1015.begin();
-
-    while (ltc2944.begin() == false) {
-        Serial.println("Failed to detect LTC2944!");
-    delay(5000);
+    //ads1015.setGain(GAIN_TWO);
+    if (!ads1015.begin()) {
+#ifdef USE_ROS
+      nh.logerror("Failed to initialize ADS1015!");
+#else
+      Serial.println("Failed to initialize ADS1015!");
+#endif
+    } else {
+          Serial.println("ADS1015 initialized.");
     }
-
-    //Setup LTC2944
-    ltc2944.setPrescalerM(256);
-    ltc2944.setADCMode(ADC_MODE_SLEEP);
-    ltc2944.startMeasurement();
 
     //Setup LTC3219
     ltc3219.begin();
@@ -149,7 +148,7 @@ void publishROS(){
 }
 #else
 void publishSerial(){
-
+    Serial.println();
     Serial.println("Arduino measurements:");
     Serial.print("ACDC: ");
     Serial.print(data.v_acdc);
@@ -165,8 +164,7 @@ void publishSerial(){
     Serial.print("    ");
 
     Serial.println();
-    Serial.println();
-    Serial.println("LTC2944 measurements:");
+    Serial.println("Current measurements:");
     Serial.print("Output: ");
     Serial.print(data.v_out);
     Serial.print("V  ");
@@ -179,8 +177,7 @@ void publishSerial(){
     Serial.print("Port     ");
     Serial.print(data.acdc_val);
     Serial.println();
-
-
+    Serial.println();
 }
 #endif
 
@@ -192,18 +189,21 @@ bool setTimerFlag(void *){
 
 void readSensorsData(){
     // Read analog inputs
-    int16_t adc0, adc1, adc2;
-    adc0 = ads1015.readADC_SingleEnded(0);
-    adc1 = ads1015.readADC_SingleEnded(1);
-    adc2 = ads1015.readADC_SingleEnded(2);
-    data.v_acdc = (float)adc0 * ADS1015_LSB_VOLTAGE * ADC_RESISTOR_DIVIDER_RATIO;
-    data.v_bat1 = (float)adc1 * ADS1015_LSB_VOLTAGE * ADC_RESISTOR_DIVIDER_RATIO;
-    data.v_bat2 = (float)adc2 * ADS1015_LSB_VOLTAGE * ADC_RESISTOR_DIVIDER_RATIO;
+    int16_t adc0, adc1, adc2, adc3;
+    adc0 = ads1015.readADC_SingleEnded(0u);
+    delay(10);
+    adc1 = ads1015.readADC_SingleEnded(1u);
+    delay(10);
+    adc2 = ads1015.readADC_SingleEnded(2u);
+    delay(10);
+    adc3 = ads1015.readADC_SingleEnded(3u);
+    data.v_acdc = ads1015.computeVolts(adc0) * ADC_RESISTOR_DIVIDER_RATIO;
+    data.v_bat1 = ads1015.computeVolts(adc1) * ADC_RESISTOR_DIVIDER_RATIO;
+    data.v_bat2 = ads1015.computeVolts(adc2) * ADC_RESISTOR_DIVIDER_RATIO;
 
-    // Read data from LTC2944
-    data.v_out = ltc2944.getVoltage();
-    data.c_out = ltc2944.getCurrent();
-    data.temp = ltc2944.getTemperature();
+    // Convert data from TLI4971
+    data.v_out = ads1015.computeVolts(adc3);
+    data.c_out = 0;
 
     //Read from tca9554
     tca9554.readInputs(&tca9554_value);
