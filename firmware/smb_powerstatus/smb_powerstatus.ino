@@ -33,7 +33,7 @@ auto timer = timer_create_default();
 
 // Voltages
 Adafruit_ADS1015 ads1015;
-data_struct data;
+power_status_struct data;
 
 // LED
 LTC3219 ltc3219;
@@ -46,8 +46,8 @@ uint8_t tca9554_value = 0;
 void setup(){
 
 
-// Begin Wire
-Wire.begin();
+    // Begin Wire
+    Wire.begin();
 
 #ifdef USE_ROS
     // Initialize ROS publisher
@@ -75,7 +75,11 @@ Wire.begin();
       Serial.println("Failed to initialize ADS1015!");
 #endif
     } else {
-          Serial.println("ADS1015 initialized.");
+#ifdef USE_ROS
+      nh.loginfo("ADS1015 initialized.");
+#else
+      Serial.println("ADS1015 initialized.");
+#endif
     }
 
     //Setup LTC3219
@@ -113,9 +117,8 @@ void publishROS(){
     smb_power_msg.power_supply_present = POWER_PRESENT(data.v_acdc);
     smb_power_msg.power_supply_voltage = data.v_acdc;
 
-    // Output voltage and current
-    smb_power_msg.output_voltage = data.v_out;
-    smb_power_msg.output_current = data.c_out;
+    // Output current
+    smb_power_msg.output_current = data.i_out;
 
     // BATTERY 1 data
     smb_power_msg.battery_1.present = POWER_PRESENT(data.v_bat1);
@@ -123,7 +126,7 @@ void publishROS(){
     smb_power_msg.battery_1.percentage = mapVoltageToPercentage(data.v_bat1);
     if(data.bat1_use){
         smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_DISCHARGING;
-        smb_power_msg.battery_1.current = data.c_out;
+        smb_power_msg.battery_1.current = data.i_out;
     }else{
         smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_NOT_CHARGING;
         smb_power_msg.battery_1.current = 0;
@@ -135,7 +138,7 @@ void publishROS(){
     smb_power_msg.battery_2.percentage = mapVoltageToPercentage(data.v_bat2);
     if(data.bat2_use){
         smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_DISCHARGING;
-        smb_power_msg.battery_2.current = data.c_out;
+        smb_power_msg.battery_2.current = data.i_out;
     }else{
         smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_NOT_CHARGING;
         smb_power_msg.battery_2.current = 0;
@@ -164,18 +167,20 @@ void publishSerial(){
     Serial.print("    ");
 
     Serial.println();
-    Serial.println("Current measurements:");
-    Serial.print("Output: ");
-    Serial.print(data.v_out);
-    Serial.print("V  ");
-    Serial.print(data.c_out);
+    Serial.println();
+    Serial.println("Current measurements (TLI4971 on ADC port 3):");
+    Serial.print("ADC port3: ");
+    Serial.print(data.v_aout);
+    Serial.print("V    -->  ");
+    Serial.print(data.i_out);
     Serial.print("A     ");
-    Serial.print(data.temp);
-    Serial.print("°C");
+    Serial.println();
     Serial.println();
 
-    Serial.print("Port     ");
-    Serial.print(data.acdc_val);
+    Serial.print("Active input: ");
+    if (data.acdc_use) Serial.print("AC DC (X1)");
+    if (data.bat1_use) Serial.print("BAT 1 (X2)");
+    if (data.bat2_use) Serial.print("BAT 2 (X3)");
     Serial.println();
     Serial.println();
 }
@@ -202,8 +207,8 @@ void readSensorsData(){
     data.v_bat2 = ads1015.computeVolts(adc2) * ADC_RESISTOR_DIVIDER_RATIO;
 
     // Convert data from TLI4971
-    data.v_out = ads1015.computeVolts(adc3);
-    data.c_out = 0;
+    data.v_aout = ads1015.computeVolts(adc3);
+    data.i_out = (data.v_aout-TLI4971_VREF) / TLI4971_SENSITIVITY;
 
     //Read from tca9554
     tca9554.readInputs(&tca9554_value);
@@ -219,17 +224,21 @@ void powerSourceUsed(){
         data.acdc_use = true;
         data.bat1_use = false;
         data.bat2_use = false;
-    }else if (power_valid[1] && !power_valid[0])
+    } else if (power_valid[1] && !power_valid[0])
     {
         data.acdc_use = false;
         data.bat1_use = true;
         data.bat2_use = false;        
-    }else
+    } else if (power_valid[2] && !power_valid[0] && !power_valid[1])
     {
         data.acdc_use = false;
         data.bat1_use = false;
         data.bat2_use = true;
-    }    
+    } else {
+        data.acdc_use = false;
+        data.bat1_use = false;
+        data.bat2_use = false;
+    }
 }
 
 float mapVoltageToPercentage(float voltage){
