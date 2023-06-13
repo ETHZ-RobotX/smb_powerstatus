@@ -1,6 +1,5 @@
 #ifndef SMB_2_CONTROLLER_H__
 #define SMB_2_CONTROLLER_H__
-
 #define USE_ROS
 
 #ifdef USE_ROS
@@ -14,7 +13,6 @@
 bool timer_flag = false;
 
 // ADS1015 and ADC conversion defines
-#define ADS1015_LSB_VOLTAGE           0.001
 #define ADC_RESISTOR_DIVIDER_RATIO    ((6.8 + 91)/6.8)
 
 // Battery define
@@ -24,21 +22,21 @@ bool timer_flag = false;
 #define BATTERY_MINUMUM             19.8
 #define POWER_PRESENT(voltage)    voltage > POWER_PRESENT_VOLTAGE
 
-// LTC2944
-#define LTC2944_RESISTOR            1 //milliohms
+// TLI4971 (current sensor connected to ADC port 4)
+#define TLI4971_SENSITIVITY          0.0545 // volt / Ampere, 0.048 according to spec sheet
+#define TLI4971_VREF                 1.65 // volt
 
 
 // Define struct for the voltages
-struct data_struct
+struct power_status_struct
 {
     // Voltages from ADS1015 
     float v_acdc;
     float v_bat1;
     float v_bat2;
-    // Voltages and current from LTC2944
-    float v_out;
-    float c_out;
-    float temp;
+    float v_aout;
+    // current from TLI4971
+    float i_out;
     // Battery use
     bool acdc_use;
     bool bat1_use;
