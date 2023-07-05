@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 import json
 from sensor_msgs.msg import BatteryState
 
-class MqttRosBridge:
+class SMBBaseBattery:
     def __init__(self):
         rospy.init_node('mqtt_ros_bridge')
         self.mqtt_client = mqtt.Client()
@@ -25,6 +25,7 @@ class MqttRosBridge:
         m_decode=str(msg.payload.decode("utf-8", "ignore"))
         m_in=json.loads(m_decode)
         ros_message = BatteryState()
+        ros_message.header.stamp = rospy.Time.now()
         ros_message.voltage = m_in["total_voltage"]
         ros_message.current = m_in["current"]
         ros_message.capacity = m_in["capacity_remain"]
@@ -41,5 +42,5 @@ class MqttRosBridge:
         rospy.spin()
 
 if __name__ == '__main__':
-    bridge = MqttRosBridge()
-    bridge.run()
+    baseBattery = SMBBaseBattery()
+    baseBattery.run()
