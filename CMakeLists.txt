@@ -26,3 +26,9 @@ catkin_package(
     CATKIN_DEPENDS message_runtime
 )
 
+catkin_install_python(PROGRAMS
+  src/base_battery_status.py
+  ${python_scripts_DIR}
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+

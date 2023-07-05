@@ -8,5 +8,7 @@
         <param name="port"  type="string"   value="$(arg serial_port)"/>
         <param name="baud"  type="int"      value="$(arg baud_rate)"/>
     </node>
+
+    <!-- <node name="base_battery_status"    pkg="smb_powestatus" type="base_battery_status.py"/> -->
     
 </launch>
