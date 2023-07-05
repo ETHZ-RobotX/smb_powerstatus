@@ -12,7 +12,8 @@ class MqttRosBridge:
         self.mqtt_client.on_connect = self.on_mqtt_connect
         self.mqtt_client.on_message = self.on_mqtt_message
         self.mqtt_broker_address = rospy.get_param('~mqtt_broker_address', 'localhost')
-        self.mqtt_topic = rospy.get_param('~mqtt_topic', 'smb_261_batt/cell_info')
+        print(self.mqtt_broker_address)
+        self.mqtt_topic = rospy.get_param('~mqtt_topic', 'smb_base_battery/cell_info')
         self.ros_topic = rospy.get_param('~ros_topic', 'ros_topic')
         self.ros_publisher = rospy.Publisher(self.ros_topic, BatteryState, queue_size=10)
 
