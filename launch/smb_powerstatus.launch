@@ -8,5 +8,9 @@
         <param name="port"  type="string"   value="$(arg serial_port)"/>
         <param name="baud"  type="int"      value="$(arg baud_rate)"/>
     </node>
+
+    <node name="base_battery_status"    pkg="smb_powerstatus" type="base_battery_status.py">
+        <rosparam command="load" file="$(find smb_powerstatus)/config/base_battery_status.yaml" />
+    </node>
     
 </launch>
