@@ -8,7 +8,7 @@ bool TCA9554::begin(TwoWire &wirePort) {
 	_i2cPort = &wirePort;
 
     writeByteToRegister(TCA9554_OUTPUT_REGISTER, 0x00); //digitalWrite(LED_BUILTIN, HIGH); // select output port register, set all outputs to 0 
-    writeByteToRegister(TCA9554_CONFIG_REGISTER, 0xf8); // select config register, set P0, P1 and P2 as outputs (0 = output, 1 = input)
+    writeByteToRegister(TCA9554_CONFIG_REGISTER, 0xff); // select config register, set P0, P1 and P2 as outputs (0 = output, 1 = input)
 
 	return true;
 }
@@ -29,7 +29,7 @@ void TCA9554::getBatteryValid(bool * valid){
 
 
 bool TCA9554::writeByteToRegister(uint8_t address, uint8_t value) {
-	_i2cPort->beginTransmission(TCA9554_ADDR);
+	_i2cPort->beginTransmission(TCA9554_ADDR << 1 | 1);
 	_i2cPort->write(address);
 	_i2cPort->write(value);
 	return (_i2cPort->endTransmission() == 0);
@@ -38,11 +38,11 @@ bool TCA9554::writeByteToRegister(uint8_t address, uint8_t value) {
 uint8_t TCA9554::readByteFromRegister(uint8_t address) {
 	uint8_t value = 0;
 
-	_i2cPort->beginTransmission(TCA9554_ADDR);
+	_i2cPort->beginTransmission(TCA9554_ADDR << 1);
 	_i2cPort->write(address);
 	_i2cPort->endTransmission(false);
 
-	_i2cPort->requestFrom(TCA9554_ADDR, 1);
+	_i2cPort->requestFrom(TCA9554_ADDR << 1 | 0, 1);
 	value = _i2cPort->read();
 	_i2cPort->endTransmission();
 

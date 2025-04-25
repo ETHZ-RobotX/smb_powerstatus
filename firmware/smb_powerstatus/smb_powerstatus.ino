@@ -1,8 +1,8 @@
 /************* INCLUDES *************/
 #include <stdio.h>
 #include "smb_powerstatus.h"
-#include <ros.h>
-#include <smb_powerstatus/SMBPowerStatus.h>
+// #include <ros.h>
+// #include <smb_powerstatus/SMBPowerStatus.h>
 #include <arduino-timer.h>
 #include <Adafruit_ADS1X15.h>
 #include "LTC3219.h"
@@ -87,7 +87,9 @@ void setup(){
 
     //Setup TCA9554
     tca9554.begin();
-
+#ifdef CSVOUTPUT
+    Serial.println("V_ACDC;V_Bat1;V_Bat2;I;ActiveInput");
+#endif
 }
 
 /************* LOOP *************/
@@ -151,6 +153,21 @@ void publishROS(){
 }
 #else
 void publishSerial(){
+#ifdef CSVOUTPUT
+    Serial.print(data.v_acdc);
+    Serial.print("V;");
+    Serial.print(data.v_bat1);
+    Serial.print("V;");
+    Serial.print(data.v_bat2);
+    Serial.print("V;");
+    Serial.print(data.i_out);
+    Serial.print("A;");
+    if (data.acdc_use) Serial.print("ACDC");
+    else if (data.bat1_use) Serial.print("BAT1");
+    else if (data.bat2_use) Serial.print("BAT2");
+    else Serial.print("none");
+    Serial.println();
+#else
     Serial.println();
     Serial.println("Arduino measurements:");
     Serial.print("ACDC: ");
@@ -183,8 +200,14 @@ void publishSerial(){
     if (data.bat2_use) Serial.print("BAT 2 (X3)");
     Serial.println();
     Serial.println();
+    Serial.print("TCA9554 data:");
+    Serial.print(tca9554_value);
+    Serial.println();
+    Serial.println();
+
+#endif // CSVOUTPUT
 }
-#endif
+#endif // USE_ROS
 
 bool setTimerFlag(void *){
     timer_flag = true;

@@ -1,6 +1,7 @@
 #ifndef SMB_2_CONTROLLER_H__
 #define SMB_2_CONTROLLER_H__
-#define USE_ROS
+// #define USE_ROS
+#define CSVOUTPUT
 
 #ifdef USE_ROS
 #define USE_USBCON          // Use native USB Serial as COM port for ROS
