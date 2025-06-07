@@ -1,8 +1,6 @@
 /************* INCLUDES *************/
 #include <stdio.h>
 #include "smb_powerstatus.h"
-// #include <ros.h>
-// #include <smb_powerstatus/SMBPowerStatus.h>
 #include <arduino-timer.h>
 #include <Adafruit_ADS1X15.h>
 #include "LTC3219.h"
@@ -19,17 +17,7 @@
 #define LED_BAT2_RED              LTC3219_LED6_REGISTER
 
 /************* GLOBAL VARIABLES *************/
-#ifdef USE_ROS
-// Custom message SMBPowerStatus
-smb_powerstatus::SMBPowerStatus smb_power_msg;
-
-// Nodehandle and publisher
-ros::NodeHandle nh;
-ros::Publisher smb_power_pub("/smb_powerstatus/payload", &smb_power_msg);
-#endif
-
 auto timer = timer_create_default();
-
 
 // Voltages
 Adafruit_ADS1015 ads1015;
@@ -49,18 +37,11 @@ void setup(){
     // Begin Wire
     Wire.begin();
 
-#ifdef USE_ROS
-    // Initialize ROS publisher
-    nh.getHardware()->setBaud(115200);
-    nh.initNode();
-    nh.advertise(smb_power_pub);
-#else
     //Initialize Serial communication
     Serial.begin(115200);
     while(!Serial) {
       ; // wait for serial port to connect.
     }
-#endif
 
     // Initialize timer
     timer.every(TIMER_MILLIS, setTimerFlag);
@@ -69,17 +50,9 @@ void setup(){
     //Setup ADS1015
     //ads1015.setGain(GAIN_TWO);
     if (!ads1015.begin()) {
-#ifdef USE_ROS
-      nh.logerror("Failed to initialize ADS1015!");
-#else
       Serial.println("Failed to initialize ADS1015!");
-#endif
     } else {
-#ifdef USE_ROS
-      nh.loginfo("ADS1015 initialized.");
-#else
       Serial.println("ADS1015 initialized.");
-#endif
     }
 
     //Setup LTC3219
@@ -104,54 +77,12 @@ void loop(){
 
     // Send data wenn timer is triggered
     if(timer_flag){
-        #ifdef USE_ROS
-        publishROS();
-        #else
         publishSerial();
-        #endif
         timer_flag = false;
     }
 }
 
-#ifdef USE_ROS
-void publishROS(){
-    // ACDC data
-    smb_power_msg.power_supply_present = POWER_PRESENT(data.v_acdc);
-    smb_power_msg.power_supply_voltage = data.v_acdc;
 
-    // Output current
-    smb_power_msg.output_current = data.i_out;
-
-    // BATTERY 1 data
-    smb_power_msg.battery_1.present = POWER_PRESENT(data.v_bat1);
-    smb_power_msg.battery_1.voltage = data.v_bat1;
-    smb_power_msg.battery_1.percentage = mapVoltageToPercentage(data.v_bat1);
-    if(data.bat1_use){
-        smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_DISCHARGING;
-        smb_power_msg.battery_1.current = data.i_out;
-    }else{
-        smb_power_msg.battery_1.power_supply_status = smb_power_msg.battery_1.POWER_SUPPLY_STATUS_NOT_CHARGING;
-        smb_power_msg.battery_1.current = 0;
-    }
-
-    // BATTERY 2 data
-    smb_power_msg.battery_2.present = POWER_PRESENT(data.v_bat2);
-    smb_power_msg.battery_2.voltage = data.v_bat2;
-    smb_power_msg.battery_2.percentage = mapVoltageToPercentage(data.v_bat2);
-    if(data.bat2_use){
-        smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_DISCHARGING;
-        smb_power_msg.battery_2.current = data.i_out;
-    }else{
-        smb_power_msg.battery_2.power_supply_status = smb_power_msg.battery_2.POWER_SUPPLY_STATUS_NOT_CHARGING;
-        smb_power_msg.battery_2.current = 0;
-    }
-
-
-    // Publish the data
-    smb_power_pub.publish(&smb_power_msg);
-    nh.spinOnce();
-}
-#else
 void publishSerial(){
 #ifdef CSVOUTPUT
     Serial.print(data.v_acdc);
@@ -207,7 +138,6 @@ void publishSerial(){
 
 #endif // CSVOUTPUT
 }
-#endif // USE_ROS
 
 bool setTimerFlag(void *){
     timer_flag = true;

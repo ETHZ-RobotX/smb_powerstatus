@@ -1,11 +1,6 @@
 #ifndef SMB_2_CONTROLLER_H__
 #define SMB_2_CONTROLLER_H__
-// #define USE_ROS
 #define CSVOUTPUT
-
-#ifdef USE_ROS
-#define USE_USBCON          // Use native USB Serial as COM port for ROS
-#endif
 
 /************* DEFINES *************/
 
@@ -51,13 +46,7 @@ struct power_status_struct
 
 /************* FUNCTIONS DEFINES *************/
 
-#ifdef USE_ROS
-// Publish the data to ROS
-void publishROS();
-#else
-// Print the data int the seril console
 void publishSerial();
-#endif
 
 // Set timer flag
 bool setTimerFlag();
